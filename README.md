@@ -1,4 +1,9 @@
 # Сorporate-pki-demo — PKI Lab (Corporate Digital Signature)
+![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04-E95420)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB)
+![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B)
+![PKI](https://img.shields.io/badge/Domain-PKI%20%26%20X.509-0A66C2)
+![SoftHSM](https://img.shields.io/badge/HSM-SoftHSM2-6E7781)
 
 A lightweight PKI demo environment for **enterprise-style digital signatures** on **Ubuntu 24.04**:
 

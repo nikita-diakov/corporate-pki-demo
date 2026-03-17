@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="260" viewBox="0 0 920 260">
+  <rect x="20" y="30" width="250" height="90" rx="16" fill="#0f1b33" stroke="#2a3a5e"/>
+  <text x="45" y="70" fill="#eaf0ff" font-size="18" font-family="system-ui" font-weight="700">Root CA</text>
+  <text x="45" y="97" fill="#93a4c7" font-size="13" font-family="system-ui">Issues signer certificate</text>
+
+  <rect x="335" y="30" width="250" height="90" rx="16" fill="#0f1b33" stroke="#2a3a5e"/>
+  <text x="360" y="70" fill="#eaf0ff" font-size="18" font-family="system-ui" font-weight="700">Web App</text>
+  <text x="360" y="97" fill="#93a4c7" font-size="13" font-family="system-ui">Enroll / Sign / Verify</text>
+
+  <rect x="650" y="30" width="250" height="90" rx="16" fill="#0f1b33" stroke="#2a3a5e"/>
+  <text x="675" y="70" fill="#eaf0ff" font-size="18" font-family="system-ui" font-weight="700">SoftHSM2</text>
+  <text x="675" y="97" fill="#93a4c7" font-size="13" font-family="system-ui">PKCS#11 private key</text>
+
+  <line x1="270" y1="75" x2="335" y2="75" stroke="#6ee7ff" stroke-width="3"/>
+  <polygon points="335,75 325,69 325,81" fill="#6ee7ff"/>
+  <line x1="585" y1="75" x2="650" y2="75" stroke="#34d399" stroke-width="3"/>
+  <polygon points="650,75 640,69 640,81" fill="#34d399"/>
+
+  <rect x="20" y="150" width="880" height="80" rx="16" fill="#0b1220" stroke="#2a3a5e"/>
+  <text x="45" y="195" fill="#93a4c7" font-size="13" font-family="system-ui">
+    Demo: issue certificate → sign file (Base64) → verify (trust + validity + revocation)
+  </text>
+</svg>

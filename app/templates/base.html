@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>corporate-pki-demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <header class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold">PKI</div>
+        <div>
+          <div class="text-lg font-semibold leading-tight">corporate-pki-demo</div>
+          <div class="text-sm text-slate-500 leading-tight">SoftHSM2 (PKCS#11) • Root CA • Sign • Verify</div>
+        </div>
+      </div>
+      <div class="text-sm text-slate-500">Ubuntu 24 • setup in ~1 hour</div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="max-w-6xl mx-auto px-4 pb-10 text-sm text-slate-500">
+    <div class="border-t pt-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+        <div>© corporate-pki-demo. Educational use.</div>
+        <div class="flex gap-4">
+          <a class="underline hover:no-underline" href="/api/ca/ca_cert.pem" target="_blank">Download CA certificate</a>
+          <a class="underline hover:no-underline" href="/docs" target="_blank">OpenAPI</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

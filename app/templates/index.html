@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div x-data="pkiApp()" x-init="refreshStatus()" class="space-y-8">
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white rounded-2xl shadow-sm border p-5">
+      <div class="text-sm text-slate-500">SoftHSM2 token</div>
+      <div class="mt-2 text-xl font-semibold" x-text="status.token.ok ? 'Connected' : 'Not found'"></div>
+      <div class="mt-2 text-sm">
+        <div><span class="text-slate-500">Label:</span> <span class="font-mono" x-text="status.token.label || '-'"></span></div>
+        <div><span class="text-slate-500">Module:</span> <span class="font-mono break-all" x-text="status.token.module || '-'"></span></div>
+        <div><span class="text-slate-500">SOFTHSM2_CONF:</span> <span class="font-mono break-all" x-text="status.token.conf || '-'"></span></div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border p-5">
+      <div class="text-sm text-slate-500">Signer</div>
+      <div class="mt-2 text-xl font-semibold" x-text="status.signer.ready ? 'Ready' : 'Not enrolled'"></div>
+      <div class="mt-2 text-sm space-y-1">
+        <div><span class="text-slate-500">Key:</span> <span x-text="status.signer.key_present ? 'present' : 'missing'"></span></div>
+        <div><span class="text-slate-500">Certificate:</span> <span x-text="status.signer.cert_present ? 'present' : 'missing'"></span></div>
+        <div><span class="text-slate-500">Expires:</span> <span x-text="status.signer.not_after || '-'"></span></div>
+        <div><span class="text-slate-500">Revoked:</span>
+          <span :class="status.signer.revoked ? 'text-red-600 font-semibold' : 'text-emerald-700 font-semibold'"
+                x-text="status.signer.revoked ? 'yes' : 'no'"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border p-5">
+      <div class="text-sm text-slate-500">Root CA</div>
+      <div class="mt-2 text-xl font-semibold" x-text="status.ca.ready ? 'Ready' : 'Not created'"></div>
+      <div class="mt-2 text-sm space-y-1">
+        <div><span class="text-slate-500">Subject:</span> <span class="font-mono break-all" x-text="status.ca.subject || '-'"></span></div>
+        <div><span class="text-slate-500">Expires:</span> <span x-text="status.ca.not_after || '-'"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-sm border">
+    <div class="border-b px-5 py-4 flex flex-wrap items-center gap-2">
+      <button class="px-3 py-2 rounded-xl text-sm font-medium"
+              :class="tab==='enroll' ? 'bg-slate-900 text-white' : 'bg-slate-100 hover:bg-slate-200'"
+              @click="tab='enroll'">1) Enroll certificate</button>
+      <button class="px-3 py-2 rounded-xl text-sm font-medium"
+              :class="tab==='sign' ? 'bg-slate-900 text-white' : 'bg-slate-100 hover:bg-slate-200'"
+              @click="tab='sign'">2) Sign document</button>
+      <button class="px-3 py-2 rounded-xl text-sm font-medium"
+              :class="tab==='verify' ? 'bg-slate-900 text-white' : 'bg-slate-100 hover:bg-slate-200'"
+              @click="tab='verify'">3) Verify signature</button>
+
+      <div class="ml-auto flex items-center gap-2">
+        <button class="px-3 py-2 rounded-xl text-sm font-medium bg-slate-100 hover:bg-slate-200"
+                @click="refreshStatus()">Refresh</button>
+        <button class="px-3 py-2 rounded-xl text-sm font-medium bg-rose-50 hover:bg-rose-100 text-rose-700"
+                @click="revokeSigner()">Revoke (demo)</button>
+      </div>
+    </div>
+
+    <div x-show="tab==='enroll'" class="p-6 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 rounded-2xl bg-slate-50 border">
+          <div class="font-semibold">What happens</div>
+          <ol class="mt-2 text-sm text-slate-700 list-decimal pl-5 space-y-1">
+            <li>Open the SoftHSM2 token by label <span class="font-mono">TestToken</span>.</li>
+            <li>Ensure an RSA key exists in the token (private key stays inside).</li>
+            <li>Create a local Root CA (if missing).</li>
+            <li>Issue a new signer certificate and store it in the token.</li>
+          </ol>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white border">
+          <div class="font-semibold">Signer data</div>
+          <div class="mt-3 grid grid-cols-1 gap-3">
+            <label class="text-sm">
+              <span class="text-slate-600">Common Name (CN)</span>
+              <input x-model="enroll.cn" type="text" class="mt-1 w-full rounded-xl border px-3 py-2"
+                     placeholder="John Doe"/>
+            </label>
+            <label class="text-sm">
+              <span class="text-slate-600">Validity (days)</span>
+              <input x-model.number="enroll.days" type="number" min="1" max="3650" class="mt-1 w-full rounded-xl border px-3 py-2"/>
+            </label>
+            <button @click="doEnroll()" class="rounded-xl bg-slate-900 text-white px-4 py-2 font-medium hover:bg-slate-800">
+              Enroll certificate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div x-show="enrollResult" class="p-4 rounded-2xl border bg-emerald-50">
+        <div class="font-semibold text-emerald-800">Done</div>
+        <div class="mt-2 text-sm text-emerald-900 space-y-1">
+          <div><span class="text-emerald-700">Serial:</span> <span class="font-mono" x-text="enrollResult.serial"></span></div>
+          <div><span class="text-emerald-700">Expires:</span> <span x-text="enrollResult.not_after"></span></div>
+          <div><span class="text-emerald-700">Certificate:</span> <a class="underline" :href="enrollResult.cert_url" target="_blank">download PEM</a></div>
+        </div>
+      </div>
+
+      <div x-show="error" class="p-4 rounded-2xl border bg-rose-50 text-rose-800">
+        <div class="font-semibold">Error</div>
+        <div class="mt-1 text-sm whitespace-pre-wrap" x-text="error"></div>
+      </div>
+    </div>
+
+    <div x-show="tab==='sign'" class="p-6 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 rounded-2xl bg-slate-50 border">
+          <div class="font-semibold">Upload a file</div>
+          <p class="mt-2 text-sm text-slate-700">The server signs the uploaded file using the PKCS#11 private key and returns a Base64 signature.</p>
+          <input @change="sign.file = $event.target.files[0]" type="file" class="mt-3 w-full"/>
+          <button @click="doSign()" class="mt-4 rounded-xl bg-slate-900 text-white px-4 py-2 font-medium hover:bg-slate-800"
+                  :disabled="!sign.file">Sign</button>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white border">
+          <div class="font-semibold">Signature result</div>
+          <template x-if="signResult">
+            <div class="mt-3 space-y-3">
+              <div class="text-sm">
+                <div class="text-slate-600">SHA-256 (hex)</div>
+                <div class="font-mono break-all" x-text="signResult.sha256_hex"></div>
+              </div>
+              <div class="text-sm">
+                <div class="text-slate-600">Signature (Base64)</div>
+                <textarea class="mt-1 w-full rounded-xl border p-3 font-mono text-xs" rows="6" readonly
+                          x-text="signResult.signature_b64"></textarea>
+              </div>
+              <div class="flex gap-2">
+                <a class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-medium"
+                   :href="signResult.download_signature_url">Download .b64</a>
+                <a class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-medium"
+                   :href="signResult.cert_url" target="_blank">Signer cert (PEM)</a>
+              </div>
+            </div>
+          </template>
+          <template x-if="!signResult">
+            <p class="mt-2 text-sm text-slate-500">No signature yet.</p>
+          </template>
+        </div>
+      </div>
+
+      <div x-show="error" class="p-4 rounded-2xl border bg-rose-50 text-rose-800">
+        <div class="font-semibold">Error</div>
+        <div class="mt-1 text-sm whitespace-pre-wrap" x-text="error"></div>
+      </div>
+    </div>
+
+    <div x-show="tab==='verify'" class="p-6 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 rounded-2xl bg-slate-50 border">
+          <div class="font-semibold">Input</div>
+          <div class="mt-3 space-y-3">
+            <label class="text-sm block">
+              <span class="text-slate-600">File</span>
+              <input @change="verify.file = $event.target.files[0]" type="file" class="mt-1 w-full"/>
+            </label>
+            <label class="text-sm block">
+              <span class="text-slate-600">Signature (Base64)</span>
+              <textarea x-model="verify.signature_b64" class="mt-1 w-full rounded-xl border p-3 font-mono text-xs" rows="6"
+                        placeholder="paste Base64 signature here"></textarea>
+            </label>
+            <button @click="doVerify()" class="rounded-xl bg-slate-900 text-white px-4 py-2 font-medium hover:bg-slate-800"
+                    :disabled="!verify.file || !verify.signature_b64.trim()">Verify</button>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white border">
+          <div class="font-semibold">Result</div>
+
+          <template x-if="verifyResult">
+            <div class="mt-3 space-y-3">
+              <div class="flex flex-wrap gap-2">
+                <span class="px-3 py-1 rounded-full text-sm font-semibold"
+                      :class="verifyResult.signature_ok ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
+                      x-text="verifyResult.signature_ok ? 'Signature OK' : 'Signature FAIL'"></span>
+
+                <span class="px-3 py-1 rounded-full text-sm font-semibold"
+                      :class="verifyResult.cert_ok ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
+                      x-text="verifyResult.cert_ok ? 'Certificate valid' : 'Certificate invalid'"></span>
+
+                <span class="px-3 py-1 rounded-full text-sm font-semibold"
+                      :class="verifyResult.revoked ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'"
+                      x-text="verifyResult.revoked ? 'Revoked' : 'Not revoked'"></span>
+              </div>
+
+              <div class="text-sm">
+                <div class="text-slate-600">Details</div>
+                <div class="whitespace-pre-wrap" x-text="verifyResult.message"></div>
+              </div>
+
+              <div class="text-sm">
+                <div class="text-slate-600">Certificate</div>
+                <div class="font-mono text-xs break-all" x-text="verifyResult.cert_subject"></div>
+                <div class="text-slate-500">Serial: <span class="font-mono" x-text="verifyResult.cert_serial"></span></div>
+                <div class="text-slate-500">Expires: <span x-text="verifyResult.cert_not_after"></span></div>
+              </div>
+            </div>
+          </template>
+
+          <template x-if="!verifyResult">
+            <p class="mt-2 text-sm text-slate-500">No verification yet.</p>
+          </template>
+        </div>
+      </div>
+
+      <div x-show="error" class="p-4 rounded-2xl border bg-rose-50 text-rose-800">
+        <div class="font-semibold">Error</div>
+        <div class="mt-1 text-sm whitespace-pre-wrap" x-text="error"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+async function safeJson(resp){
+  const ct = resp.headers.get('content-type') || '';
+  const text = await resp.text();
+  if(ct.includes('application/json')){
+    try { return {data: JSON.parse(text), raw: text}; }
+    catch(e){ return {data: null, raw: text}; }
+  }
+  return {data: null, raw: text};
+}
+
+function pkiApp(){
+  return {
+    tab: 'enroll',
+    status: { token:{}, signer:{}, ca:{} },
+    enroll: { cn: 'John Doe', days: 365 },
+    enrollResult: null,
+    sign: { file: null },
+    signResult: null,
+    verify: { file: null, signature_b64: '' },
+    verifyResult: null,
+    error: '',
+
+    async refreshStatus(){
+      this.error = '';
+      try{
+        const r = await fetch('/api/status');
+        const {data:j, raw} = await safeJson(r);
+        if(!r.ok) throw new Error(raw || ('HTTP ' + r.status));
+        this.status = j || this.status;
+      } catch(e){ this.error = String(e); }
+    },
+
+    async doEnroll(){
+      this.error=''; this.enrollResult=null;
+      try{
+        const r = await fetch('/api/enroll', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(this.enroll)
+        });
+        const {data:j, raw} = await safeJson(r);
+        if(!r.ok) throw new Error((j && j.detail) ? j.detail : (raw || ('HTTP ' + r.status)));
+        this.enrollResult = j;
+        await this.refreshStatus();
+      } catch(e){ this.error = String(e); }
+    },
+
+    async doSign(){
+      this.error=''; this.signResult=null;
+      try{
+        const fd = new FormData();
+        fd.append('file', this.sign.file);
+        const r = await fetch('/api/sign', { method:'POST', body: fd });
+        const {data:j, raw} = await safeJson(r);
+        if(!r.ok) throw new Error((j && j.detail) ? j.detail : (raw || ('HTTP ' + r.status)));
+        this.signResult = j;
+        await this.refreshStatus();
+      } catch(e){ this.error = String(e); }
+    },
+
+    async doVerify(){
+      this.error=''; this.verifyResult=null;
+      try{
+        const fd = new FormData();
+        fd.append('file', this.verify.file);
+        fd.append('signature_b64', this.verify.signature_b64);
+        const r = await fetch('/api/verify', { method:'POST', body: fd });
+        const {data:j, raw} = await safeJson(r);
+        if(!r.ok) throw new Error((j && j.detail) ? j.detail : (raw || ('HTTP ' + r.status)));
+        this.verifyResult = j;
+      } catch(e){ this.error = String(e); }
+    },
+
+    async revokeSigner(){
+      this.error='';
+      try{
+        const r = await fetch('/api/revoke', { method:'POST' });
+        const {data:j, raw} = await safeJson(r);
+        if(!r.ok) throw new Error((j && j.detail) ? j.detail : (raw || ('HTTP ' + r.status)));
+        await this.refreshStatus();
+      } catch(e){ this.error = String(e); }
+    },
+  }
+}
+</script>
+
+{% endblock %}

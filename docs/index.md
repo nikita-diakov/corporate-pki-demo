@@ -1,4 +1,4 @@
-# corporate-pki-demo
+# Corporate-pki-demo
 
 A minimal **corporate PKI** demo:
 
@@ -6,7 +6,7 @@ A minimal **corporate PKI** demo:
 - SoftHSM2 stores non-extractable private keys via PKCS#11
 - Web UI supports Enroll → Sign → Verify (+ demo revocation)
 
-## What you can demonstrate
+## Demo highlights
 - Certificate issuance and trust chain basics
 - PKCS#11 signing (private key stays inside the token)
 - Verification logic (signature + certificate validity)

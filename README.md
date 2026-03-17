@@ -1,4 +1,4 @@
-# corporate-pki-demo — PKI Lab (Corporate Digital Signature)
+# Сorporate-pki-demo — PKI Lab (Corporate Digital Signature)
 
 A lightweight PKI demo environment for **enterprise-style digital signatures** on **Ubuntu 24.04**:
 
@@ -40,23 +40,6 @@ Open: http://127.0.0.1:8000
 2) **Sign** → upload a file and receive a Base64 signature  
 3) **Verify** → upload file + signature and get validity result  
 4) **Revoke (demo)** → mark certificate as revoked and verify again  
-
-
-## Screenshots
-Add screenshots under `assets/screenshots/`:
-
-- `status.png`
-- `enroll.png`
-- `sign.png`
-- `verify.png`
-- `revoke.png` (optional)
-
-Then reference them here:
-
-![UI - Status](assets/screenshots/status.png)
-![UI - Enroll](assets/screenshots/enroll.png)
-![UI - Sign](assets/screenshots/sign.png)
-![UI - Verify](assets/screenshots/verify.png)
 
 ## CLI checks
 

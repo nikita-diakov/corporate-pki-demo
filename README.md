@@ -77,7 +77,7 @@ This repo is for learning/demos. Do **NOT** commit:
 - any private keys (`*.key`, `ca_key.pem`, etc.)
 
 ## License
-Educational use.
+MIT
 
 ## Publishing on GitHub
 See [GITHUB_SETUP.md](GITHUB_SETUP.md).

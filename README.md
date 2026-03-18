@@ -12,6 +12,14 @@ A lightweight PKI demo environment for **enterprise-style digital signatures** o
 - Sign documents and verify validity (signature + trust chain + validity window + demo revocation)
 - Clean English web UI for demos and screenshots
 
+## Why this project matters
+
+This project demonstrates a practical PKI workflow for enterprise-style digital signatures:
+certificate issuance, protected private key storage with PKCS#11 / SoftHSM2, document signing,
+signature verification, and a simple revocation scenario.
+
+It is designed as a compact lab for portfolio demos, academic work, and interview walkthroughs.
+
 ## Architecture
 - **Root CA (lab mode):** CA private key stored on disk for fast setup
 - **Signer:** RSA keypair generated and stored inside SoftHSM2 (PKCS#11)
